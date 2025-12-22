@@ -4,7 +4,7 @@ import uvicorn
 from app.routers import auth, users
 from app.middlewares.logging import log_request
 
-app = FastAPI(title="FastAPI Production 2025")
+app = FastAPI(title="FastAPI setup 2025")
 
 origins = [
     "http://localhost",

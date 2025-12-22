@@ -1,13 +1,26 @@
+import os
+from dotenv import load_dotenv
 from logging.config import fileConfig
+import importlib
+import pkgutil
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
+from sqlalchemy import engine_from_config, pool
+import sqlmodel
 from alembic import context
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Load .env
+load_dotenv()
+
+# Alembic Config object
 config = context.config
+
+# .env
+DATABASE_URL = (
+    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+    f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+)
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
+
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -18,7 +31,14 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+import app.models  # models/__init__.py
+
+for loader, name, is_pkg in pkgutil.iter_modules(app.models.__path__):
+    importlib.import_module(f"app.models.{name}")
+
+from app.models.base import Base
+
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -64,9 +84,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

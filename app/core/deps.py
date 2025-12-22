@@ -1,10 +1,10 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from app.core.config import settings
+from jose import JWTError
+from app.core.security import decode_token
 from app.core.database import get_db
 from sqlmodel import Session
-from app.models.user import User
+from app.repositories.user_repo import UserRepo
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -13,23 +13,41 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        payload = jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
-        )
-        user = db.get(User, payload["sub"])
+        payload = decode_token(token)
+        user_id = payload.get("sub")
+
+        if user_id is None:
+            raise credentials_exception
+
+        user = UserRepo(db).get(user_id)
         if not user:
-            raise Exception()
+            raise credentials_exception
+
         return user
+
     except JWTError:
-        raise HTTPException(401, "Invalid token")
+        raise credentials_exception
 
 
 def require_permission(code: str):
     def checker(user=Depends(get_current_user)):
-        perms = [p.code for p in user.role.permissions]
-        if code not in perms:
-            raise HTTPException(403, "Forbidden")
+        if not user.role or not user.role.permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="No permission"
+            )
+
+        permissions = [p.code for p in user.role.permissions]
+        if code not in permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden"
+            )
+
         return user
 
     return checker

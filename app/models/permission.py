@@ -1,6 +1,7 @@
-from sqlmodel import Field, SQLModel
+import uuid
+from sqlmodel import SQLModel, Field
 
 
 class Permission(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     code: str
