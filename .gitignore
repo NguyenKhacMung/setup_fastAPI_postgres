@@ -1,0 +1,62 @@
+# ======================
+# Python
+# ======================
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Virtual environments
+.env
+.venv
+venv/
+env/
+ENV/
+
+# ======================
+# FastAPI / Uvicorn
+# ======================
+logs/
+*.log
+uvicorn.log
+
+# ======================
+# SQLAlchemy / Alembic
+# ======================
+alembic/versions/__pycache__/
+alembic/*.log
+
+# ======================
+# Database
+# ======================
+*.sqlite3
+*.db
+
+# ======================
+# Docker
+# ======================
+pgdata/
+docker-data/
+
+# ======================
+# Test / Coverage
+# ======================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ======================
+# OS / Editor
+# ======================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.vscode/
+.idea/
+
+# ======================
+# Build
+# ======================
+dist/
+build/
+*.egg-info/
