@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
-from app.core.database import get_db
+from fastapi import APIRouter, HTTPException, status, Depends
+from app.core.database import SessionDep
 from app.core.security import verify_password, create_access_token
 from app.repositories.user_repo import UserRepo
 from app.schemas.auth import LoginBody, Token
 from app.schemas.user import UserResponse, UserCreate
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/login", response_model=Token)
 def login(
-    body: LoginBody,
-    db: Session = Depends(get_db),
+    # body: LoginBody,
+    db: SessionDep,
+    body: OAuth2PasswordRequestForm = Depends(),
 ):
     user = UserRepo(db).get_by_username(body.username)
 
@@ -22,7 +23,7 @@ def login(
             detail="Incorrect email or password",
         )
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -31,6 +32,6 @@ def login(
 )
 def create_user(
     user: UserCreate,
-    db: Session = Depends(get_db),
+    db: SessionDep,
 ):
     return UserRepo(db).create(user)

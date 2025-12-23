@@ -1,17 +1,17 @@
 from datetime import datetime, timedelta
 from jose import jwt
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"])
+password_hash = PasswordHash.recommended()
 
 
 def hash_password(pw: str):
-    return pwd_context.hash(pw[:72])
+    return password_hash.hash(pw)
 
 
 def verify_password(pw, hashed):
-    return pwd_context.verify(pw, hashed)
+    return password_hash.verify(pw, hashed)
 
 
 def create_access_token(data: dict):

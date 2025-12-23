@@ -4,10 +4,11 @@ sqlmodel
 SQLAlchemy
 alembic
 pydantic
+pydantic-settings
 python-dotenv
 loguru
-passlib[bcrypt]
+pwdlib[argon2,bcrypt]
 python-jose
 psycopg2-binary
-pydantic-settings
+python-multipart
 

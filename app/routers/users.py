@@ -1,27 +1,25 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
-from sqlmodel import Session
-from app.schemas.user import UserResponse, UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserUpdate
 from app.repositories.user_repo import UserRepo
-from app.core.database import get_db
+from app.models.user import User
+from app.core.database import SessionDep
 from app.core.deps import require_permission
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/", response_model=List[UserResponse])
-def list_users(
-    _: str = Depends(require_permission("user.read")), db: Session = Depends(get_db)
-):
+@router.get("/", response_model=List[User])
+def list_users(db: SessionDep):
     return UserRepo(db).list()
 
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=User)
 def get_user(
     user_id: uuid.UUID,
+    db: SessionDep,
     _: str = Depends(require_permission("user.read")),
-    db: Session = Depends(get_db),
 ):
     user = UserRepo(db).get(user_id)
     if not user:
@@ -31,21 +29,21 @@ def get_user(
     return user
 
 
-@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
 def create_user(
     user_in: UserCreate,
+    db: SessionDep,
     _: str = Depends(require_permission("user.create")),
-    db: Session = Depends(get_db),
 ):
     return UserRepo(db).create(user_in)
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=User)
 def update_user(
     user_id: uuid.UUID,
     user_in: UserUpdate,
+    db: SessionDep,
     _: str = Depends(require_permission("user.update")),
-    db: Session = Depends(get_db),
 ):
     user = UserRepo(db).update(user_id, user_in)
     if not user:
@@ -58,8 +56,8 @@ def update_user(
 @router.delete("/{user_id}")
 def delete_user(
     user_id: uuid.UUID,
+    db: SessionDep,
     _: str = Depends(require_permission("user.delete")),
-    db: Session = Depends(get_db),
 ):
     UserRepo(db).delete(user_id)
     return {"detail": "User deleted"}

@@ -47,5 +47,7 @@ alembic upgrade head
 
 ```bash
 alembic downgrade -1
+
+alembic downgrade base ## back to init
 ```
 > **Note**: Edit the connection and DB name in `.env` and `alembic.ini` if necessary.

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from app.routers import auth, users
 from app.middlewares.logging import log_request
+from app.core.config import settings
 
 app = FastAPI(title="FastAPI setup 2025")
 
@@ -27,7 +28,7 @@ app.include_router(users.router, prefix="/api")
 if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=settings.HOST,
+        port=settings.PORT,
         reload=True,
     )

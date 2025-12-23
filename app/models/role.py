@@ -1,17 +1,16 @@
-from __future__ import annotations
-import uuid
-from typing import List
+from uuid import UUID, uuid4
 from sqlmodel import SQLModel, Field, Relationship
-from app.models.permission import Permission
-
-
-class RolePermission(SQLModel, table=True):
-    role_id: uuid.UUID = Field(foreign_key="role.id", primary_key=True)
-    permission_id: uuid.UUID = Field(foreign_key="permission.id", primary_key=True)
+from app.models.role_permission import RolePermission
 
 
 class Role(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    __tablename__ = "roles"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
     name: str
-    users: List["User"] = Relationship(back_populates="role")  # forward reference
-    permissions: List[Permission] = Relationship(link_model=RolePermission)
+
+    users: list["User"] = Relationship(back_populates="role")
+
+    permissions: list["Permission"] = Relationship(
+        back_populates="roles", link_model=RolePermission
+    )

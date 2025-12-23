@@ -5,21 +5,14 @@ import importlib
 import pkgutil
 
 from sqlalchemy import engine_from_config, pool
-import sqlmodel
 from alembic import context
-
-# Load .env
-load_dotenv()
+from app.core.config import settings
 
 # Alembic Config object
 config = context.config
 
 # .env
-DATABASE_URL = (
-    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-)
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
 # Interpret the config file for Python logging.
@@ -36,9 +29,9 @@ import app.models  # models/__init__.py
 for loader, name, is_pkg in pkgutil.iter_modules(app.models.__path__):
     importlib.import_module(f"app.models.{name}")
 
-from app.models.base import Base
+from sqlmodel import SQLModel
 
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

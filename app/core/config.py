@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     ENV: str = "development"
+    PORT: int
+    HOST: str
 
     APP_NAME: str
     DB_HOST: str
