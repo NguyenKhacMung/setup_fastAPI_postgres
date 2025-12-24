@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import List
 from sqlmodel import Session, select
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
@@ -13,10 +13,10 @@ class UserRepo:
     def list(self) -> List[User]:
         return list(self.db.exec(select(User)))
 
-    def get(self, user_id: uuid.UUID) -> Optional[User]:
+    def get(self, user_id: uuid.UUID) -> User | None:
         return self.db.get(User, user_id)
 
-    def get_by_username(self, username: str) -> Optional[User]:
+    def get_by_username(self, username: str) -> User | None:
         return self.db.exec(select(User).where(User.username == username)).first()
 
     def create(self, user_in: UserCreate) -> User:
@@ -28,7 +28,7 @@ class UserRepo:
         self.db.refresh(user)
         return user
 
-    def update(self, user_id: uuid.UUID, user_in: UserUpdate) -> Optional[User]:
+    def update(self, user_id: uuid.UUID, user_in: UserUpdate) -> User | None:
         user = self.get(user_id)
         if not user:
             return None

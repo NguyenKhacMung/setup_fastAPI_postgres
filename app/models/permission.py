@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 from sqlmodel import SQLModel, Field, Relationship
 from app.models.role_permission import RolePermission
+from app.models.role import Role
 
 
 class Permission(SQLModel, table=True):

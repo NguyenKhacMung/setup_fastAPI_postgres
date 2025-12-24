@@ -5,20 +5,20 @@ from app.schemas.user import UserCreate, UserUpdate
 from app.repositories.user_repo import UserRepo
 from app.models.user import User
 from app.core.database import SessionDep
-from app.core.deps import require_permission
+from app.core.deps import require_permission, get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/", response_model=List[User])
-def list_users(db: SessionDep):
+def list_users(db: SessionDep, _: str = Depends(get_current_user)):
     return UserRepo(db).list()
 
 
 @router.get("/{user_id}", response_model=User)
 def get_user(
-    user_id: uuid.UUID,
     db: SessionDep,
+    user_id: uuid.UUID,
     _: str = Depends(require_permission("user.read")),
 ):
     user = UserRepo(db).get(user_id)
@@ -31,8 +31,8 @@ def get_user(
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
 def create_user(
-    user_in: UserCreate,
     db: SessionDep,
+    user_in: UserCreate,
     _: str = Depends(require_permission("user.create")),
 ):
     return UserRepo(db).create(user_in)
@@ -40,9 +40,9 @@ def create_user(
 
 @router.put("/{user_id}", response_model=User)
 def update_user(
+    db: SessionDep,
     user_id: uuid.UUID,
     user_in: UserUpdate,
-    db: SessionDep,
     _: str = Depends(require_permission("user.update")),
 ):
     user = UserRepo(db).update(user_id, user_in)

@@ -11,9 +11,9 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/login", response_model=Token)
 def login(
-    # body: LoginBody,
     db: SessionDep,
-    body: OAuth2PasswordRequestForm = Depends(),
+    # body: OAuth2PasswordRequestForm = Depends(),
+    body: LoginBody,
 ):
     user = UserRepo(db).get_by_username(body.username)
 
@@ -31,7 +31,7 @@ def login(
     "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
 )
 def create_user(
-    user: UserCreate,
     db: SessionDep,
+    user: UserCreate,
 ):
     return UserRepo(db).create(user)
