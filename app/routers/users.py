@@ -1,21 +1,20 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.repositories.user_repo import UserRepo
-from app.models.user import User
 from app.core.database import SessionDep
 from app.core.deps import require_permission, get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/", response_model=List[User])
+@router.get("/", response_model=List[UserResponse])
 def list_users(db: SessionDep, _: str = Depends(get_current_user)):
     return UserRepo(db).list()
 
 
-@router.get("/{user_id}", response_model=User)
+@router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     db: SessionDep,
     user_id: uuid.UUID,
@@ -29,16 +28,21 @@ def get_user(
     return user
 
 
-@router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
     db: SessionDep,
     user_in: UserCreate,
     _: str = Depends(require_permission("user.create")),
 ):
+    user = UserRepo(db).get_by_username(user_in.username)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User already exists"
+        )
     return UserRepo(db).create(user_in)
 
 
-@router.put("/{user_id}", response_model=User)
+@router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     db: SessionDep,
     user_id: uuid.UUID,

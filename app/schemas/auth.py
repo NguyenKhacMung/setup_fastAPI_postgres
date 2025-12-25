@@ -1,9 +1,10 @@
 from pydantic import BaseModel
+from sqlmodel import Field
+from app.models.user import UserBase
 
 
-class LoginBody(BaseModel):
-    username: str
-    password: str
+class LoginBody(UserBase):
+    password: str = Field(min_length=8, max_length=12)
 
 
 class Token(BaseModel):

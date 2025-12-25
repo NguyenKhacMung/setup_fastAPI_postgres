@@ -1,19 +1,17 @@
 import uuid
-from pydantic import BaseModel
+from sqlmodel import Field
+from app.models.user import UserBase
 
 
-class UserCreate(BaseModel):
-    username: str
-    password: str
+class UserCreate(UserBase):
+    password: str = Field(min_length=8, max_length=12)
 
 
-class UserResponse(BaseModel):
+class UserResponse(UserBase):
     id: uuid.UUID
-    username: str
     role_id: uuid.UUID | None = None
 
 
-class UserUpdate(BaseModel):
-    username: str | None = None
-    password: str | None = None
+class UserUpdate(UserBase):
+    password: str
     role_id: uuid.UUID | None = None

@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from app.routers import auth, users
@@ -6,6 +7,19 @@ from app.middlewares.logging import log_request
 from app.core.config import settings
 
 app = FastAPI(title="FastAPI setup 2025")
+
+
+@app.exception_handler(Exception)
+async def internal_server_error_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "code": "INTERNAL_SERVER_ERROR",
+            "error": "Internal Server Error",
+            "message": "Something went wrong",
+        },
+    )
+
 
 origins = [
     "http://localhost",

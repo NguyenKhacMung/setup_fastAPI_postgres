@@ -34,4 +34,9 @@ def create_user(
     db: SessionDep,
     user: UserCreate,
 ):
+    userExists = UserRepo(db).get_by_username(user.username)
+    if userExists:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User already exists"
+        )
     return UserRepo(db).create(user)
