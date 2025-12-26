@@ -1,19 +1,16 @@
 import uuid
-from pydantic import BaseModel
 from typing import List
-
-
-class RoleBase(BaseModel):
-    name: str
+from app.models import RoleBase
+from app.schemas.permission import PermissionResponse
 
 
 class RoleCreate(RoleBase): ...
 
 
-class RoleRead(RoleBase):
+class RoleResponse(RoleBase):
     id: uuid.UUID
-    permissions: List[str] = []
+    permissions: List[PermissionResponse] = []
 
 
-class RoleUpdate(RoleBase):
-    permissions: List[str] = []
+class RoleUpdateRequest(RoleBase):
+    permissions: List[PermissionResponse] = []

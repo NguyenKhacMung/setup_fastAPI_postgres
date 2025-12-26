@@ -11,4 +11,4 @@ pwdlib[argon2,bcrypt]
 python-jose
 psycopg2-binary
 python-multipart
-
+fastapi-pagination[sqlmodel]

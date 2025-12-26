@@ -1,19 +1,20 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status
 from app.core.database import SessionDep
 from app.core.security import verify_password, create_access_token
 from app.repositories.user_repo import UserRepo
-from app.schemas.auth import LoginBody, Token
-from app.schemas.user import UserResponse, UserCreate
-from fastapi.security import OAuth2PasswordRequestForm
+from app.schemas.auth import LoginRequest, AuthResponse
+from app.schemas.user import UserResponse, UserCreateRequest
+
+# from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=AuthResponse)
 def login(
     db: SessionDep,
     # body: OAuth2PasswordRequestForm = Depends(),
-    body: LoginBody,
+    body: LoginRequest,
 ):
     user = UserRepo(db).get_by_username(body.username)
 
@@ -32,11 +33,11 @@ def login(
 )
 def create_user(
     db: SessionDep,
-    user: UserCreate,
+    body: UserCreateRequest,
 ):
-    userExists = UserRepo(db).get_by_username(user.username)
+    userExists = UserRepo(db).get_by_username(body.username)
     if userExists:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User already exists"
         )
-    return UserRepo(db).create(user)
+    return UserRepo(db).create(body)

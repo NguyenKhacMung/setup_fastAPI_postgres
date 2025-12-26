@@ -1,7 +1,13 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+
+from app.schemas.user import (
+    UserCreateRequest,
+    UserPaginationResponse,
+    UserResponse,
+    UserSearchRequest,
+    UserUpdateRequest,
+)
 from app.repositories.user_repo import UserRepo
 from app.core.database import SessionDep
 from app.core.deps import require_permission, get_current_user
@@ -9,7 +15,7 @@ from app.core.deps import require_permission, get_current_user
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("/", response_model=list[UserResponse])
 def list_users(db: SessionDep, _: str = Depends(get_current_user)):
     return UserRepo(db).list()
 
@@ -31,25 +37,25 @@ def get_user(
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
     db: SessionDep,
-    user_in: UserCreate,
+    body: UserCreateRequest,
     _: str = Depends(require_permission("user.create")),
 ):
-    user = UserRepo(db).get_by_username(user_in.username)
+    user = UserRepo(db).get_by_username(body.username)
     if user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User already exists"
         )
-    return UserRepo(db).create(user_in)
+    return UserRepo(db).create(body)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     db: SessionDep,
     user_id: uuid.UUID,
-    user_in: UserUpdate,
+    body: UserUpdateRequest,
     _: str = Depends(require_permission("user.update")),
 ):
-    user = UserRepo(db).update(user_id, user_in)
+    user = UserRepo(db).update(user_id, body)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -65,3 +71,12 @@ def delete_user(
 ):
     UserRepo(db).delete(user_id)
     return {"detail": "User deleted"}
+
+
+@router.post("/search", response_model=UserPaginationResponse)
+def search_users(
+    db: SessionDep,
+    body: UserSearchRequest,
+    # _: str = Depends(get_current_user),
+):
+    return UserRepo(db).search(body)

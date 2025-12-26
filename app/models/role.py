@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from sqlmodel import SQLModel, Field, Relationship
 from app.models.role_permission import RolePermission
 
@@ -8,11 +8,14 @@ if TYPE_CHECKING:
     from app.models.permission import Permission
 
 
-class Role(SQLModel, table=True):
-    __tablename__ = "roles"
+class RoleBase(SQLModel):
+    name: str
+
+
+class Role(RoleBase, table=True):
+    __tablename__: ClassVar[str] = "roles"
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    name: str
 
     users: list["User"] = Relationship(back_populates="role")
 

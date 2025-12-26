@@ -1,13 +1,9 @@
 import uuid
-from pydantic import BaseModel
-
-
-class PermissionBase(BaseModel):
-    code: str
+from app.models.permission import PermissionBase
 
 
 class PermissionCreate(PermissionBase): ...
 
 
-class PermissionRead(PermissionBase):
+class PermissionResponse(PermissionBase):
     id: uuid.UUID

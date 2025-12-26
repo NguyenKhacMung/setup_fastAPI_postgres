@@ -1,12 +1,15 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 import uvicorn
 from app.routers import auth, users
 from app.middlewares.logging import log_request
 from app.core.config import settings
 
 app = FastAPI(title="FastAPI setup 2025")
+
+add_pagination(app)
 
 
 @app.exception_handler(Exception)

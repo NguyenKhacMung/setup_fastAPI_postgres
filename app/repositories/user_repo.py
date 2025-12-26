@@ -1,9 +1,11 @@
 import uuid
 from typing import List
-from sqlmodel import Session, select
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from fastapi_pagination.ext.sqlmodel import paginate
+from fastapi_pagination import Params
+from sqlmodel import Session, col, select, func, asc, desc
 from app.core.security import hash_password
+from app.models.user import User
+from app.schemas.user import UserCreateRequest, UserSearchRequest, UserUpdateRequest
 
 
 class UserRepo:
@@ -19,7 +21,7 @@ class UserRepo:
     def get_by_username(self, username: str) -> User | None:
         return self.db.exec(select(User).where(User.username == username)).first()
 
-    def create(self, user_in: UserCreate) -> User:
+    def create(self, user_in: UserCreateRequest) -> User:
         user = User(
             username=user_in.username, password_hash=hash_password(user_in.password)
         )
@@ -28,7 +30,7 @@ class UserRepo:
         self.db.refresh(user)
         return user
 
-    def update(self, user_id: uuid.UUID, user_in: UserUpdate) -> User | None:
+    def update(self, user_id: uuid.UUID, user_in: UserUpdateRequest) -> User | None:
         user = self.get(user_id)
         if not user:
             return None
@@ -44,6 +46,84 @@ class UserRepo:
 
     def delete(self, user_id: uuid.UUID) -> None:
         user = self.get(user_id)
-        if user:
-            self.db.delete(user)
-            self.db.commit()
+        if not user:
+            return None
+        self.db.delete(user)
+        self.db.commit()
+
+    # def search(self, params: UserSearchRequest):
+    #     # 1. Init query select
+    #     query = select(User)
+
+    #     # 2. Handle Search
+    #     if params.search:
+    #         query = query.where(col(User.username).ilike(f"%{params.search}%"))
+
+    #     # 3. Handle Filter
+    #     if params.filter:
+    #         for field, value in params.filter.items():
+    #             attr = getattr(User, field, None)
+    #             if attr is not None and value is not None:
+    #                 query = query.where(attr == value)
+
+    #     # 4. Handle Sort
+    #     sort_field = params.sort_by or "username"
+    #     sort_order = params.sort_order or "asc"
+    #     sort_column = getattr(User, sort_field, User.username)
+
+    #     query = query.order_by(
+    #         desc(sort_column) if sort_order == "desc" else asc(sort_column)
+    #     )
+
+    #     page_data = paginate(self.db, query, Params(page=params.page, size=params.size))
+
+    #     return {
+    #         **page_data.model_dump(),
+    #         "filter": params.filter,
+    #         "sort_by": params.sort_by,
+    #         "sort_order": params.sort_order,
+    #     }
+
+    def search(self, params: UserSearchRequest) -> dict:
+        # 1. init query select
+        query = select(User)
+
+        # 2. Handle Search
+        if params.search:
+            query = query.where(col(User.username).ilike(f"%{params.search}%"))
+
+        # 3. Handle Filter
+        if params.filter:
+            for field, value in params.filter.items():
+                attr = getattr(User, field, None)
+                if attr is not None and value is not None:
+                    query = query.where(attr == value)
+
+        # 4. Count Total
+        total = self.db.exec(select(func.count()).select_from(query.subquery())).one()
+
+        # 5. Handle Sort
+        sort_field = params.sort_by or "username"
+        sort_order = params.sort_order or "asc"
+        sort_column = getattr(User, sort_field, User.username)
+        query = query.order_by(
+            desc(sort_column) if sort_order == "desc" else asc(sort_column)
+        )
+
+        # 6. Handle Paging
+        page_size = max(params.size, 1)
+        page = max(params.page, 1)
+        offset = (page - 1) * page_size
+
+        results = self.db.exec(query.offset(offset).limit(page_size)).all()
+
+        return {
+            "total": total,
+            "pages": (total + page_size - 1) // page_size,
+            "page": page,
+            "size": page_size,
+            "sort_by": sort_field,
+            "sort_order": sort_order,
+            "filter": params.filter,
+            "items": results,
+        }
