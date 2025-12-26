@@ -44,12 +44,13 @@ class UserRepo:
         self.db.refresh(user)
         return user
 
-    def delete(self, user_id: uuid.UUID) -> None:
+    def delete(self, user_id: uuid.UUID) -> bool | None:
         user = self.get(user_id)
         if not user:
             return None
         self.db.delete(user)
         self.db.commit()
+        return True
 
     # def search(self, params: UserSearchRequest):
     #     # 1. Init query select

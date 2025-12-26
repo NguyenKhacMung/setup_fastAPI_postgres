@@ -67,9 +67,13 @@ def update_user(
 def delete_user(
     user_id: uuid.UUID,
     db: SessionDep,
-    _: str = Depends(require_permission("user.delete")),
+    # _: str = Depends(require_permission("user.delete")),
 ):
-    UserRepo(db).delete(user_id)
+    user = UserRepo(db).delete(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     return {"detail": "User deleted"}
 
 
