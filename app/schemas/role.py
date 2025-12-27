@@ -1,5 +1,5 @@
-import uuid
-from typing import List
+from uuid import UUID
+from app.core.constants import RoleEnum
 from app.models import RoleBase
 from app.schemas.permission import PermissionResponse
 
@@ -8,9 +8,15 @@ class RoleCreate(RoleBase): ...
 
 
 class RoleResponse(RoleBase):
-    id: uuid.UUID
-    permissions: List[PermissionResponse] = []
+    id: UUID
+    permissions: list[PermissionResponse] = []
 
 
 class RoleUpdateRequest(RoleBase):
-    permissions: List[PermissionResponse] = []
+    name: RoleEnum | None = None
+    permission_ids: list[UUID] | None = None
+
+
+class RoleCreateRequest(RoleBase):
+    name: str
+    permission_ids: list[UUID] = []

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from app.core.database import SessionDep
 from app.core.security import verify_password, create_access_token
-from app.repositories.user_repo import UserRepo
+from app.repositories.user_repo import UserRepository
 from app.schemas.auth import LoginRequest, AuthResponse
 from app.schemas.user import UserResponse, UserCreateRequest
 
@@ -16,7 +16,7 @@ def login(
     # body: OAuth2PasswordRequestForm = Depends(),
     body: LoginRequest,
 ):
-    user = UserRepo(db).get_by_username(body.username)
+    user = UserRepository(db).get_by_username(body.username)
 
     if not user or not verify_password(body.password, user.password_hash):
         raise HTTPException(
@@ -35,9 +35,9 @@ def create_user(
     db: SessionDep,
     body: UserCreateRequest,
 ):
-    userExists = UserRepo(db).get_by_username(body.username)
+    userExists = UserRepository(db).get_by_username(body.username)
     if userExists:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User already exists"
         )
-    return UserRepo(db).create(body)
+    return UserRepository(db).create(body)

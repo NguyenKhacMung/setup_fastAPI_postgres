@@ -1,18 +1,20 @@
 import uuid
-from typing import List
 from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_pagination import Params
 from sqlmodel import Session, col, select, func, asc, desc
+from app.core.constants import RoleEnum
 from app.core.security import hash_password
 from app.models.user import User
+from app.repositories.role_repo import RoleRepository
 from app.schemas.user import UserCreateRequest, UserSearchRequest, UserUpdateRequest
 
 
-class UserRepo:
+class UserRepository:
     def __init__(self, db: Session):
         self.db = db
+        self.role_repo = RoleRepository(db)
 
-    def list(self) -> List[User]:
+    def get_all(self) -> list[User]:
         return list(self.db.exec(select(User)))
 
     def get(self, user_id: uuid.UUID) -> User | None:
@@ -22,8 +24,12 @@ class UserRepo:
         return self.db.exec(select(User).where(User.username == username)).first()
 
     def create(self, user_in: UserCreateRequest) -> User:
+        default_role = self.role_repo.get_by_name(RoleEnum.USER.value)
+
         user = User(
-            username=user_in.username, password_hash=hash_password(user_in.password)
+            username=user_in.username,
+            password_hash=hash_password(user_in.password),
+            role_id=default_role.id if default_role else None,
         )
         self.db.add(user)
         self.db.commit()
@@ -51,6 +57,21 @@ class UserRepo:
         self.db.delete(user)
         self.db.commit()
         return True
+
+    def update_role(self, user_id: uuid.UUID, role_name: RoleEnum) -> User | None:
+        user = self.get(user_id)
+        if not user:
+            return None
+
+        role = self.role_repo.get_by_name(role_name.value)
+        if not role:
+            return None
+
+        user.role_id = role.id
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
 
     # def search(self, params: UserSearchRequest):
     #     # 1. Init query select

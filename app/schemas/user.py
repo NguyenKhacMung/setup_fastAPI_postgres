@@ -1,6 +1,7 @@
 import uuid
 from typing import Any, Literal
 from pydantic import BaseModel, Field
+from app.core.constants import RoleEnum
 from app.models import UserBase
 from app.schemas.role import RoleResponse
 
@@ -17,6 +18,10 @@ class UserResponse(UserBase):
 class UserUpdateRequest(UserBase):
     password: str | None = None
     role_id: uuid.UUID | None = None
+
+
+class UpdateUserRoleRequest(BaseModel):
+    role_name: RoleEnum
 
 
 class UserSearchRequest(BaseModel):

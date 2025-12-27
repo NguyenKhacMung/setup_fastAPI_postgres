@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 import uvicorn
-from app.routers import auth, users
+from app.routers import auth, permissions, roles, users
 from app.middlewares.logging import log_request
 from app.core.config import settings
 
@@ -40,6 +40,8 @@ app.middleware("http")(log_request)
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(roles.router, prefix="/api")
+app.include_router(permissions.router, prefix="/api")
 
 
 if __name__ == "__main__":

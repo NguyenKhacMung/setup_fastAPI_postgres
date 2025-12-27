@@ -1,9 +1,11 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError
+from app.core.constants import PermissionEnum
 from app.core.security import decode_token
 from app.core.database import SessionDep
-from app.repositories.user_repo import UserRepo
+from app.models.user import User
+from app.repositories.user_repo import UserRepository
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 security = HTTPBearer()
@@ -27,7 +29,7 @@ def get_current_user(
         if user_id is None:
             raise credentials_exception
 
-        user = UserRepo(db).get(user_id)
+        user = UserRepository(db).get(user_id)
         if not user:
             raise credentials_exception
 
@@ -37,19 +39,23 @@ def get_current_user(
         raise credentials_exception
 
 
-def require_permission(code: str):
-    def checker(user=Depends(get_current_user)):
-        if not user.role or not user.role.permissions:
+def require_permissions(required_permissions: list[PermissionEnum]):
+    def permission_checker(current_user: User = Depends(get_current_user)):
+        if not current_user.role or not current_user.role.permissions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="No permission"
             )
 
-        permissions = [p.code for p in user.role.permissions]
-        if code not in permissions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden"
-            )
+        # Get list of permission codes from user's role
+        user_permissions = {p.code for p in current_user.role.permissions}
 
-        return user
+        # Check if all required permissions are present
+        for permission in required_permissions:
+            if permission.value not in user_permissions:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Missing required permission: {permission.value}",
+                )
+        return current_user
 
-    return checker
+    return permission_checker
