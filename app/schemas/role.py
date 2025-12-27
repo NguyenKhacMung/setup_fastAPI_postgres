@@ -4,12 +4,9 @@ from app.models import RoleBase
 from app.schemas.permission import PermissionResponse
 
 
-class RoleCreate(RoleBase): ...
-
-
-class RoleResponse(RoleBase):
-    id: UUID
-    permissions: list[PermissionResponse] = []
+class RoleCreateRequest(RoleBase):
+    name: RoleEnum
+    permission_ids: list[UUID] | None = None
 
 
 class RoleUpdateRequest(RoleBase):
@@ -17,6 +14,6 @@ class RoleUpdateRequest(RoleBase):
     permission_ids: list[UUID] | None = None
 
 
-class RoleCreateRequest(RoleBase):
-    name: str
-    permission_ids: list[UUID] = []
+class RoleResponse(RoleBase):
+    id: UUID
+    permissions: list[PermissionResponse] = []

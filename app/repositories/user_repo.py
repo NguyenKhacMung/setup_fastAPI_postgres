@@ -63,7 +63,7 @@ class UserRepository:
         if not user:
             return None
 
-        role = self.role_repo.get_by_name(role_name.value)
+        role = self.role_repo.get_by_name(role_name)
         if not role:
             return None
 
