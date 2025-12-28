@@ -1,8 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.background import P
 
-from app.core.constants import PermissionEnum, RoleEnum
+from app.core.constants import PermissionEnum
 from app.schemas.user import (
     UpdateUserRoleRequest,
     UserCreateRequest,
@@ -13,13 +12,15 @@ from app.schemas.user import (
 )
 from app.repositories.user_repo import UserRepository
 from app.core.database import SessionDep
-from app.core.deps import require_permissions, get_current_user
+from app.core.deps import require_permissions
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/", response_model=list[UserResponse])
-def list_users(db: SessionDep, _: str = Depends(get_current_user)):
+def list_users(
+    db: SessionDep, _: str = Depends(require_permissions([PermissionEnum.READ]))
+):
     return UserRepository(db).get_all()
 
 
