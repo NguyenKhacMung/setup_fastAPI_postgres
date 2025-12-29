@@ -7,7 +7,7 @@ pydantic
 pydantic-settings
 python-dotenv
 pwdlib[argon2,bcrypt]
-python-jose
+pyJWT
 psycopg2-binary
 python-multipart
 fastapi-pagination[sqlmodel]

@@ -1,7 +1,6 @@
-from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError
+from jwt import InvalidTokenError
 from app.core.constants import PermissionEnum
 from app.core.security import decode_token
 from app.core.database import SessionDep
@@ -36,7 +35,7 @@ def get_current_user(
 
         return user
 
-    except JWTError:
+    except InvalidTokenError:
         raise credentials_exception
 
 
