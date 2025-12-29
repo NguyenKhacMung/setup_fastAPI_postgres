@@ -6,7 +6,6 @@ alembic
 pydantic
 pydantic-settings
 python-dotenv
-loguru
 pwdlib[argon2,bcrypt]
 python-jose
 psycopg2-binary

@@ -1,11 +1,10 @@
-from typing import TypeVar, Generic
 from uuid import UUID
-from argon2 import Type
+from typing import Type, TypeVar, Generic
 from pydantic import BaseModel
-from sqlmodel import Session, select, func
-from sqlalchemy.sql import Select
+from sqlmodel.sql.expression import SelectOfScalar
+from sqlmodel import SQLModel, Session, select, func
 
-T = TypeVar("T")
+T = TypeVar("T", bound=SQLModel)
 
 
 class Page(BaseModel, Generic[T]):
@@ -43,7 +42,7 @@ class BaseRepository(Generic[T]):
 
     def paginate(
         self,
-        query: Select,
+        query: SelectOfScalar[T],
         *,
         page: int = 1,
         size: int = 10,
@@ -57,7 +56,7 @@ class BaseRepository(Generic[T]):
         items = self.db.exec(query.offset(offset).limit(size)).all()
 
         return Page[T](
-            items=items,
+            items=list(items),
             total=total,
             page=page,
             size=size,

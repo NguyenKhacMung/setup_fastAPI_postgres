@@ -3,9 +3,12 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 import uvicorn
-from app.routers import auth, permissions, roles, users
+from app.core.logging_config import setup_logging
 from app.middlewares.logging import log_request
+from app.routers import auth, permissions, roles, users
 from app.core.config import settings
+
+setup_logging()
 
 app = FastAPI(title="FastAPI setup 2025")
 
@@ -24,14 +27,9 @@ async def internal_server_error_handler(request: Request, exc: Exception):
     )
 
 
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

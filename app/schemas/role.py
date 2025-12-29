@@ -6,7 +6,7 @@ from app.schemas.permission import PermissionResponse
 
 class RoleCreateRequest(RoleBase):
     name: RoleEnum
-    permission_ids: list[UUID] | None = None
+    permission_ids: list[UUID]
 
 
 class RoleUpdateRequest(RoleBase):

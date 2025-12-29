@@ -15,7 +15,7 @@ class RoleRepository(BaseRepository[Role]):
     def get_by_name(self, name: str) -> Role | None:
         return self.db.exec(select(Role).where(Role.name == name)).first()
 
-    def create(self, name: str, permission_ids: list[UUID]):
+    def create(self, name: str, permission_ids: list[UUID]) -> Role:
         role = Role(name=name)
 
         if permission_ids:
@@ -24,7 +24,7 @@ class RoleRepository(BaseRepository[Role]):
 
         return self.add(role)
 
-    def update(self, role_id: UUID, role: RoleUpdateRequest):
+    def update(self, role_id: UUID, role: RoleUpdateRequest) -> Role | None:
         db_role = self.get(role_id)
         if not db_role:
             return None
@@ -32,7 +32,7 @@ class RoleRepository(BaseRepository[Role]):
         if role.name:
             db_role.name = role.name
 
-        if role.permission_ids is not None:
+        if role.permission_ids:
             perms = self.permission_repo.get_by_ids(role.permission_ids)
             db_role.permissions = perms
 

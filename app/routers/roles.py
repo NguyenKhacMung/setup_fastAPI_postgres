@@ -21,6 +21,9 @@ def create_role(
     db: SessionDep,
     _=Depends(require_permissions([PermissionEnum.CREATE])),
 ):
+    role = RoleRepository(db).get_by_name(body.name)
+    if role:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Role already exists")
     return RoleRepository(db).create(body.name, body.permission_ids)
 
 
