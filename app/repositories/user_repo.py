@@ -1,3 +1,4 @@
+import re
 import uuid
 from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_pagination import Params
@@ -18,39 +19,37 @@ class UserRepository(BaseRepository[User]):
     def get_by_username(self, username: str) -> User | None:
         return self.db.exec(select(User).where(User.username == username)).first()
 
-    def create(self, user_in: UserCreateRequest) -> User:
+    def create_user(self, data: UserCreateRequest) -> User:
         default_role = self.role_repo.get_by_name(RoleEnum.USER.value)
 
-        user = User(
-            username=user_in.username,
-            password_hash=hash_password(user_in.password),
-            role_id=default_role.id if default_role else None,
+        return self.create(
+            data,
+            extra_data={
+                "password_hash": hash_password(data.password),
+                "role_id": default_role.id if default_role else None,
+            },
         )
-        return self.add(user)
 
-    def update(self, user_id: uuid.UUID, user_in: UserUpdateRequest) -> User | None:
-        user = self.get(user_id)
-        if not user:
-            return None
-        if user_in.username is not None:
-            user.username = user_in.username
-        if user_in.password is not None:
-            user.password_hash = hash_password(user_in.password)
-        if user_in.role_id is not None:
-            user.role_id = user_in.role_id
-        return self.add(user)
+    def update(self, user_id: uuid.UUID, data: UserUpdateRequest) -> User | None:
+        return self.update_by_id(
+            user_id,
+            data,
+            extra_data=(
+                {"password_hash": hash_password(data.password)}
+                if data.password
+                else None
+            ),
+        )
 
     def update_role(self, user_id: uuid.UUID, role_name: RoleEnum) -> User | None:
-        user = self.get(user_id)
-        if not user:
-            return None
-
         role = self.role_repo.get_by_name(role_name)
         if not role:
             return None
 
-        user.role_id = role.id
-        return self.add(user)
+        return self.update_by_id(
+            user_id,
+            {"role_id": role.id},
+        )
 
     def search(self, params: UserSearchRequest) -> dict:
         # init query select

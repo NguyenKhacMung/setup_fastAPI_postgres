@@ -29,7 +29,7 @@ def create_permission(
     db: SessionDep,
     _=Depends(require_permissions([PermissionEnum.CREATE])),
 ):
-    return PermissionRepository(db).create(body.code)
+    return PermissionRepository(db).create(body)
 
 
 @router.put("/{permission_id}", response_model=PermissionResponse)
@@ -39,7 +39,7 @@ def update_permission(
     db: SessionDep,
     _=Depends(require_permissions([PermissionEnum.UPDATE])),
 ):
-    updated = PermissionRepository(db).update(permission_id, body.code)
+    updated = PermissionRepository(db).update_by_id(permission_id, body)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found"
@@ -53,7 +53,7 @@ def delete_permission(
     db: SessionDep,
     _=Depends(require_permissions([PermissionEnum.DELETE])),
 ):
-    if not PermissionRepository(db).delete(permission_id):
+    if not PermissionRepository(db).delete_by_id(permission_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found"
         )

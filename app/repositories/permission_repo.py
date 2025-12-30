@@ -12,15 +12,3 @@ class PermissionRepository(BaseRepository[Permission]):
         return list(
             self.db.exec(select(Permission).where(col(Permission.id).in_(ids))).all()
         )
-
-    def create(self, code: str) -> Permission:
-        db_obj = Permission(code=code)
-        return self.add(db_obj)
-
-    def update(self, permission_id: UUID, code: str) -> Permission | None:
-        db_obj = self.get(permission_id)
-        if not db_obj:
-            return None
-
-        db_obj.code = code
-        return self.add(db_obj)

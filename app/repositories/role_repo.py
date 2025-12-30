@@ -1,4 +1,3 @@
-import re
 from uuid import UUID
 from sqlmodel import Session, select
 from app.models.role import Role
@@ -25,14 +24,14 @@ class RoleRepository(BaseRepository[Role]):
         return self.add(role)
 
     def update(self, role_id: UUID, role: RoleUpdateRequest) -> Role | None:
-        db_role = self.get(role_id)
+        db_role = self.get_by_id(role_id)
         if not db_role:
             return None
 
         if role.name:
             db_role.name = role.name
 
-        if role.permission_ids:
+        if role.permission_ids is not None:
             perms = self.permission_repo.get_by_ids(role.permission_ids)
             db_role.permissions = perms
 

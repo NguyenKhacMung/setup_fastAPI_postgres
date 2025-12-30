@@ -30,7 +30,7 @@ def get_user(
     user_id: uuid.UUID,
     _: str = Depends(require_permissions([PermissionEnum.READ])),
 ):
-    user = UserRepository(db).get(user_id)
+    user = UserRepository(db).get_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -49,7 +49,7 @@ def create_user(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User already exists"
         )
-    return UserRepository(db).create(body)
+    return UserRepository(db).create_user(body)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -88,7 +88,7 @@ def delete_user(
     db: SessionDep,
     _: str = Depends(require_permissions([PermissionEnum.DELETE])),
 ):
-    user = UserRepository(db).delete(user_id)
+    user = UserRepository(db).delete_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"

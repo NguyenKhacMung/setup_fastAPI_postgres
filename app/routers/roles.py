@@ -46,6 +46,6 @@ def delete_role(
     db: SessionDep,
     _=Depends(require_permissions([PermissionEnum.DELETE])),
 ):
-    if not RoleRepository(db).delete(role_id):
+    if not RoleRepository(db).delete_by_id(role_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Role not found")
     return {"message": "Deleted successfully"}
