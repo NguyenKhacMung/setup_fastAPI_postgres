@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     CORS_ORIGINS: list[str] = ["http://localhost:8080"]
+    API_PREFIX: str
 
     @cached_property
     def DATABASE_URL(self) -> str:

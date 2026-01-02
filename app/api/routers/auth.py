@@ -40,4 +40,4 @@ def create_user(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User already exists"
         )
-    return UserRepository(db).create(body)
+    return UserRepository(db).create_user(body)

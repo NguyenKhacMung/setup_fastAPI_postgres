@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.constants import PermissionEnum
 from app.core.database import SessionDep
-from app.core.deps import require_permissions
+from app.api.deps import require_permissions
 from app.repositories.role_repo import RoleRepository
 from app.schemas.role import RoleCreateRequest, RoleResponse, RoleUpdateRequest
 

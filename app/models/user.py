@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import ClassVar
 from uuid import uuid4, UUID
 from sqlmodel import Column, SQLModel, Field, Relationship, func, DateTime
+
 from app.models.role import Role
 
 

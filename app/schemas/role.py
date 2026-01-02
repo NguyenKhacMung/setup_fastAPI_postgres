@@ -1,6 +1,7 @@
 from uuid import UUID
 from app.core.constants import RoleEnum
-from app.models import RoleBase
+
+from app.models.role import RoleBase
 from app.schemas.permission import PermissionResponse
 
 

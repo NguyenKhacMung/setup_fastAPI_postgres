@@ -1,4 +1,3 @@
-import re
 import uuid
 from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_pagination import Params

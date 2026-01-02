@@ -1,7 +1,9 @@
 from typing import ClassVar
 from uuid import UUID, uuid4
 from sqlmodel import SQLModel, Field, Relationship
-from app.models import Role, RolePermission
+
+from app.models.role import Role
+from app.models.role_permission import RolePermission
 
 
 class PermissionBase(SQLModel):

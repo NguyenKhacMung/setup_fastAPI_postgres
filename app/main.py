@@ -5,7 +5,8 @@ from fastapi_pagination import add_pagination
 import uvicorn
 from app.core.logging_config import setup_logging
 from app.middlewares.logging import log_request
-from app.routers import auth, permissions, roles, users
+from app.middlewares.tenant import TenantMiddleware
+from app.api.main import api_router
 from app.core.config import settings
 
 setup_logging()
@@ -34,12 +35,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(TenantMiddleware)
 app.middleware("http")(log_request)
 
-app.include_router(auth.router, prefix="/api")
-app.include_router(users.router, prefix="/api")
-app.include_router(roles.router, prefix="/api")
-app.include_router(permissions.router, prefix="/api")
+app.include_router(api_router, prefix=settings.API_PREFIX)
 
 
 if __name__ == "__main__":

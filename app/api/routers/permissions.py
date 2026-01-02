@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from uuid import UUID
 from app.core.database import SessionDep
-from app.core.deps import require_permissions
+from app.api.deps import require_permissions
 from app.repositories.permission_repo import PermissionRepository
 from app.schemas.permission import (
     PermissionCreate,

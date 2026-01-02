@@ -2,7 +2,8 @@ import uuid
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 from app.core.constants import RoleEnum
-from app.models import UserBase
+
+from app.models.user import UserBase
 from app.schemas.role import RoleResponse
 
 

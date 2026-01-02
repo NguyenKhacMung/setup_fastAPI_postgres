@@ -12,7 +12,7 @@ from app.schemas.user import (
 )
 from app.repositories.user_repo import UserRepository
 from app.core.database import SessionDep
-from app.core.deps import require_permissions
+from app.api.deps import require_permissions
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
