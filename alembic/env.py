@@ -1,62 +1,49 @@
-import os
-import importlib
-import pkgutil
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool, text
 from alembic import context
-from sqlmodel import SQLModel
-
 from app.core.config import settings
 
-# --- 1. Load Config & Logging ---
+# Alembic Config object
 config = context.config
 
-# Hack: Convert async url to sync url for Alembic (nếu dùng asyncpg)
-# Ví dụ: postgresql+asyncpg://... -> postgresql://...
-db_url = str(settings.DATABASE_URL).replace("postgresql+asyncpg", "postgresql")
-config.set_main_option("sqlalchemy.url", db_url)
+# .env
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
+
+# Interpret the config file for Python logging.
+# This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# --- 2. Load Models (Quan trọng) ---
-# Phải import đệ quy để SQLModel.metadata nhận diện được hết các bảng
-import app.models
+# add your model's MetaData object here
+# for 'autogenerate' support
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+import app.models  # models/__init__.py
 
-for loader, name, is_pkg in pkgutil.iter_modules(app.models.__path__):
-    importlib.import_module(f"app.models.{name}")
+from sqlmodel import SQLModel
 
 target_metadata = SQLModel.metadata
 
-# --- 3. Define Filter Functions (Bộ lọc bảng) ---
-
-
-def include_object_master(object, name, type_, reflected, compare_to):
-    if type_ == "table":
-        # object.schema lấy giá trị từ __table_args__ = {"schema": "master"}
-        return object.schema == "master"
-    return True
-
-
-def include_object_tenant(object, name, type_, reflected, compare_to):
-    if type_ == "table":
-        return object.schema is None
-    return True
-
-
-def get_tenants(connection):
-    try:
-        result = connection.execute(text("SELECT scheme FROM master.tenant"))
-        return [f"tenant_{row[0]}" for row in result]
-    except Exception as e:
-        return []
-
-
-# --- 4. Migration Execution ---
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option("my_important_option")
+# ... etc.
 
 
 def run_migrations_offline() -> None:
+    """Run migrations in 'offline' mode.
+
+    This configures the context with just a URL
+    and not an Engine, though an Engine is acceptable
+    here as well.  By skipping the Engine creation
+    we don't even need a DBAPI to be available.
+
+    Calls to context.execute() here emit the given string to the
+    script output.
+
+    """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -64,60 +51,78 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         include_schemas=True,
-        include_object=include_object_master,
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
 
+def get_tenant():
+    return context.get_x_argument(as_dictionary=True).get("tenant")
+
+
+def process_revision_directives(context, revision, directives):
+    tenant = get_tenant()
+    if tenant:
+        directives[0].version_path = "alembic/versions/tenant"
+    else:
+        directives[0].version_path = "alembic/versions/master"
+
+
 def run_migrations_online() -> None:
+    """Run migrations in 'online' mode."""
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
+    tenant_schema = get_tenant()
     with connectable.connect() as connection:
 
-        # ============================================
-        # PHASE 1: MIGRATE MASTER SCHEMA
-        # ============================================
-        print("🚀 [Alembic] Migrating Schema: MASTER")
-
-        connection.execute(text("CREATE SCHEMA IF NOT EXISTS master"))
-        connection.execute(text("SET search_path TO master, public"))
-        connection.commit()
-
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            include_schemas=True,
-            include_object=include_object_master,
-            version_table_schema="master",
-        )
-
-        with context.begin_transaction():
-            context.run_migrations()
-
-        # ============================================
-        # PHASE 2: MIGRATE DYNAMIC TENANTS
-        # ============================================
-        tenants = get_tenants(connection)
-
-        for tenant_schema in tenants:
-            print(f"🚀 [Alembic] Migrating Schema: {tenant_schema}")
-
+        if tenant_schema:
             connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {tenant_schema}"))
-            connection.execute(text(f"SET search_path TO {tenant_schema}, public"))
+            connection.execute(text(f'SET search_path TO "{tenant_schema}"'))
             connection.commit()
+
+            def include_object(object, name, type_, reflected, compare_to):
+                if type_ == "table" and name == "alembic_version":
+                    return False
+
+                if type_ == "table":
+                    return object.schema is None
+
+                return True
 
             context.configure(
                 connection=connection,
                 target_metadata=target_metadata,
-                include_schemas=True,
-                include_object=include_object_tenant,
                 version_table_schema=tenant_schema,
+                include_schemas=True,
+                include_object=include_object,
+                process_revision_directives=process_revision_directives,
+            )
+
+            with context.begin_transaction():
+                context.run_migrations()
+
+        else:
+            connection.execute(text("CREATE SCHEMA IF NOT EXISTS master"))
+            connection.commit()
+
+            def include_object(object, name, type_, reflected, compare_to):
+                if type_ == "table":
+                    return object.schema == "master"
+                return True
+
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata,
+                version_table_schema="master",
+                include_schemas=True,
+                include_object=include_object,
+                process_revision_directives=process_revision_directives,
             )
 
             with context.begin_transaction():
