@@ -36,7 +36,8 @@ alembic init alembic
 ```bash
 alembic revision --autogenerate -m "initial"
 
-alembic -x tenant=tenant_001 revision --autogenerate -m "initial tenant"
+alembic -n master revision --autogenerate -m "init_master"
+alembic -n tenant -x tenant=tenant_001 revision --autogenerate -m "init_tenant"
 
 ```
 2. Run the migrate/update database:
@@ -44,7 +45,8 @@ alembic -x tenant=tenant_001 revision --autogenerate -m "initial tenant"
 ```bash
 alembic upgrade head
 
-alembic -x tenant=tenant_001 upgrade head
+alembic -n master upgrade head
+alembic -n tenant -x tenant=tenant_001 upgrade head
 
 ```
 2. Run the revert database:

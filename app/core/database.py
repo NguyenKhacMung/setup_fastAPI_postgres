@@ -1,5 +1,4 @@
 from typing import Annotated
-from sqlalchemy import text
 from sqlmodel import create_engine, Session
 from fastapi import Depends, Header
 from app.core.config import settings
@@ -26,7 +25,7 @@ def get_tenant_schema(
 
 def get_session(schema: str = Depends(get_tenant_schema)):
     with Session(engine) as session:
-        session.exec(text(f'SET search_path TO "{schema}"'))
+        session.connection().exec_driver_sql(f'SET search_path TO "{schema}"')
         yield session
 
 

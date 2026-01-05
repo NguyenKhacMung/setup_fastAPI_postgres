@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from contextvars import ContextVar
 
-from sqlalchemy import text
 from sqlmodel import Session
 
 # ========= ContextVar =========
@@ -19,9 +18,12 @@ def get_schema() -> str:
 # ========= DB schema switch =========
 @contextmanager
 def schema_ctx(session: Session, schema: str):
-    prev = session.exec(text("SHOW search_path")).one()[0]
-    session.exec(text(f'SET search_path TO "{schema}"'))
+    conn = session.connection()
+
+    prev = conn.exec_driver_sql("SHOW search_path").scalar_one()
+
+    conn.exec_driver_sql(f'SET search_path TO "{schema}"')
     try:
         yield
     finally:
-        session.exec(text(f"SET search_path TO {prev}"))
+        conn.exec_driver_sql(f"SET search_path TO {prev}")
