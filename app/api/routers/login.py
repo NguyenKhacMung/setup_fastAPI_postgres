@@ -22,7 +22,7 @@ def login(db: SessionDep):
     # tenant_user = db.exec(select(TenantUser)).all()
     # print("tenant_user", tenant_user)
 
-    with schema_ctx(db, "ccc"):
+    with schema_ctx(db, "tenant_001"):
         print("inside:", db.exec(select(func.current_schema())).one())
 
     print("after:", db.exec(select(func.current_schema())).one())

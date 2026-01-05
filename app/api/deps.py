@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import InvalidTokenError
@@ -13,8 +14,8 @@ security = HTTPBearer()
 
 def get_current_user(
     db: SessionDep,
-    auth: HTTPAuthorizationCredentials = Depends(security),
-    # token: str = Depends(oauth2_scheme),
+    auth: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    # token: Annotated[str, Depends(oauth2_scheme)],
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -40,7 +41,7 @@ def get_current_user(
 
 
 def require_permissions(required_permissions: list[PermissionEnum]):
-    def permission_checker(current_user: User = Depends(get_current_user)):
+    def permission_checker(current_user: Annotated[User, Depends(get_current_user)]):
         if not current_user.role or not current_user.role.permissions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="No permission"
